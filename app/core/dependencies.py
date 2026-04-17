@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 
-from app.core.database import SessionLocal
+from app.db.session import SessionLocal
 from app.core.config import settings
 from app.models.user import User
 

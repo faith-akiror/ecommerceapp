@@ -1,5 +1,5 @@
 from sqlalchemy import Column,Integer,Float,Enum,ForeignKey
-from app.core.database import Base
+from app.db.base import Base
 import enum
 
 class Status(str,enum.Enum):

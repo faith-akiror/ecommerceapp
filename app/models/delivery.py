@@ -1,5 +1,5 @@
 from sqlalchemy import Column,Integer,ForeignKey,String
-from app.core.database import Base
+from app.db.base import Base
 
 class Delivery(Base):
     __tablename__="deliveries"
