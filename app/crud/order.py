@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.order import Order, Status
+from app.models.order import Order, OrderStatus
 from app.crud.base import CRUD
 
 
@@ -18,7 +18,7 @@ class CRUDOrder(CRUD):
         if status not in allowed.get(order.status.value, []):
             raise Exception("Invalid status transition")
 
-        order.status = Status(status)
+        order.status = OrderStatus(status)
         db.commit()
         db.refresh(order)
         return order
