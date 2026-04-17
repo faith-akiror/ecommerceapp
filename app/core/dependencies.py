@@ -1,30 +1,43 @@
 from fastapi import Depends, HTTPException
-from jose import jwt
+from jose import jwt, JWTError
 from sqlalchemy.orm import Session
+
 from app.core.database import SessionLocal
+from app.core.config import settings
 from app.models.user import User
-import os
+
 
 def get_db():
     db = SessionLocal()
-    try: yield db
-    finally: db.close()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 def get_current_user(token: str, db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
         email = payload.get("sub")
-    except:
-        raise HTTPException(401,"Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     user = db.query(User).filter_by(email=email).first()
+
     if not user:
-        raise HTTPException(404,"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+
     return user
 
-def require_role(role:str):
-    def wrapper(user=Depends(get_current_user)):
-        if user.role!=role:
-            raise HTTPException(403,"Forbidden")
+
+def require_role(role: str):
+    def checker(user=Depends(get_current_user)):
+        if user.role != role:
+            raise HTTPException(status_code=403, detail="Forbidden")
         return user
-    return wrapper
+
+    return checker
