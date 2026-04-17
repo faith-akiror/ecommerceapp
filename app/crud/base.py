@@ -1,26 +1,28 @@
-class CRUDBase:
+class CRUD:
     def __init__(self, model):
         self.model = model
 
-    def get(self, db, id):
-        return db.query(self.model).filter(self.model.id == id).first()
-
-    def get_all(self, db):
-        return db.query(self.model).all()
-
-    def create(self, db, obj):
-        db_obj = self.model(**obj.dict())
-        db.add(db_obj)
+    def create(self, db, data: dict):
+        obj = self.model(**data)
+        db.add(obj)
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        db.refresh(obj)
+        return obj
 
-    def update(self, db, db_obj, obj):
-        for k, v in obj.dict().items():
-            setattr(db_obj, k, v)
-        db.commit()
-        return db_obj
+    def get(self, db, id: int):
+        return db.query(self.model).filter_by(id=id).first()
 
-    def delete(self, db, db_obj):
-        db.delete(db_obj)
+    def get_all(self, db, skip: int = 0, limit: int = 100):
+        return db.query(self.model).offset(skip).limit(limit).all()
+
+    def update(self, db, obj, data: dict):
+        for key, value in data.items():
+            setattr(obj, key, value)
         db.commit()
+        db.refresh(obj)
+        return obj
+
+    def delete(self, db, obj):
+        db.delete(obj)
+        db.commit()
+        return obj
