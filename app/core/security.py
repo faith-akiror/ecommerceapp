@@ -14,8 +14,20 @@ def hash_password(password):
 
 def verify_password(plain, hashed):
     return pwd_context.verify(plain, hashed)
+import os
+from datetime import datetime, timedelta
+from jose import jwt
+from passlib.context import CryptContext
 
-def create_token(data: dict):
-    payload = data.copy()
-    payload.update({"exp": datetime.utcnow() + timedelta(minutes=EXPIRE)})
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+SECRET = os.getenv("SECRET_KEY")
+ALG = os.getenv("ALGORITHM")
+EXP = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+
+def hash_password(p): return pwd.hash(p)
+def verify_password(p,h): return pwd.verify(p,h)
+
+def create_token(data):
+    data.update({"exp": datetime.utcnow() + timedelta(minutes=EXP)})
+    return jwt.encode(data, SECRET, algorithm=ALG)
