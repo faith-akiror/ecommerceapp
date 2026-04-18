@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+import time
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 from app.db.base import Base
 from app.db.session import engine
@@ -16,8 +19,35 @@ from app.api.v1.routes import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup event
-    print("Application startup: Creating database tables...")
-    Base.metadata.create_all(bind=engine)
+    print("Application startup: Waiting for database connection...")
+    max_retries = 30
+    retry_count = 0
+
+    while retry_count < max_retries:
+        try:
+            # Test database connection
+            with engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+                print("Database connection successful!")
+
+            # Create tables
+            print("Creating database tables...")
+            Base.metadata.create_all(bind=engine)
+            print("Database tables created successfully!")
+            break
+        except OperationalError as e:
+            retry_count += 1
+            print(f"Database connection failed (attempt {retry_count}/{max_retries}): {e}")
+            if retry_count < max_retries:
+                print("Retrying in 2 seconds...")
+                time.sleep(2)
+            else:
+                print("Max retries reached. Application will start without database tables.")
+                break
+        except Exception as e:
+            print(f"Unexpected error during database setup: {e}")
+            break
+
     yield
     # Shutdown event
     print("Application shutdown: Database connection pool closed (if applicable).")
