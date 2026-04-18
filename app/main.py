@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 
 from app.db.base import Base
 from app.db.session import engine
-
 from app.api.v1.routes import (
     auth,
     users,
@@ -13,6 +12,7 @@ from app.api.v1.routes import (
     delivery
 )
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup event
@@ -21,12 +21,12 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown event
     print("Application shutdown: Database connection pool closed (if applicable).")
-    # In a real application, you might want to explicitly close engine if it's not handled by SQLAlchemy's default behavior
+
 
 app = FastAPI(
     title="Ecommerce API",
     version="1.0.0",
-    lifespan=lifespan # Use the new lifespan context manager
+    lifespan=lifespan
 )
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
@@ -35,6 +35,7 @@ app.include_router(products.router, prefix="/api/v1/products", tags=["Products"]
 app.include_router(cart.router, prefix="/api/v1/cart", tags=["Cart"])
 app.include_router(orders.router, prefix="/api/v1/orders", tags=["Orders"])
 app.include_router(delivery.router, prefix="/api/v1/delivery", tags=["Delivery"])
+
 
 @app.get("/health")
 def health():

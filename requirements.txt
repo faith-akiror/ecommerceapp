@@ -11,3 +11,4 @@ gunicorn
 redis
 celery
 pydantic-settings
+python-multipart

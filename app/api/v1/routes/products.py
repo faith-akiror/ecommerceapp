@@ -35,18 +35,23 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
 # VENDOR UPDATE
 @router.put("/{product_id}", response_model=ProductResponse, status_code=status.HTTP_200_OK)
-def update_product(product_id: int, product_in: ProductUpdate, db: Session = Depends(get_db)):
+def update_product(
+    product_id: int,
+    product_in: ProductUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("vendor"))
+):
     product = product_crud.get(db, product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
-    # In a real app, you'd also check if current_user.id == product.vendor_id for authorization
-    return product_crud.update(db, product, product_in.model_dump(exclude_unset=True)) # exclude_unset is good for partial updates
+    if product.vendor_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the vendor can update this product")
+    return product_crud.update(db, product, product_in.model_dump(exclude_unset=True))
 
 # ADMIN DELETE
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("admin"))])
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = product_crud.get(db, product_id)
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
     product_crud.delete(db, product)
-    return {"message": "Product deleted successfully"} # FastAPI will return 204 with no content for this

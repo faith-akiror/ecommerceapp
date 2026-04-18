@@ -38,10 +38,9 @@ def update_user(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)
         update_data["password"] = hash_password(update_data["password"])
     return user_crud.update(db, user, update_data)
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("admin"))])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = user_crud.get(db, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     user_crud.delete(db, user)
-    return {"message": "User deleted successfully"}
