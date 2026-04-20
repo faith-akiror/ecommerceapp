@@ -34,5 +34,21 @@ services:
     volumes:
       - .:/app
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ecommerce_frontend
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://api:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
 volumes:
   postgres_data:
