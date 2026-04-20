@@ -24,8 +24,6 @@ def add_item_to_cart(item_in: CartItemCreate, db: Session = Depends(get_db), use
     user_cart = user.cart
     if not user_cart:
         user_cart = cart.create(db, user.id)
-        db.refresh(user) # Refresh user to load the new cart relationship
-        user_cart = user.cart # Get the newly created cart
 
     # Add or update item in the cart
     return cart.add(db, user_cart.id, item_in.product_id, item_in.quantity)

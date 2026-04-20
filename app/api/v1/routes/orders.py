@@ -1,15 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from app.core.dependencies import get_db, get_current_user, require_role
 from app.models.order import Order, OrderStatus
 from app.models.cart import Cart
+from app.schemas.order import OrderResponse
 
 router = APIRouter()
 
 
 # CREATE ORDER FROM CART
-@router.post("/")
+@router.post("/", response_model=OrderResponse)
 def create_order(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
@@ -40,23 +42,23 @@ def create_order(
 
 
 # GET USER ORDERS
-@router.get("/")
+@router.get("/", response_model=List[OrderResponse])
 def get_orders(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    return db.query(Order).filter(Order.user_id == user.id).all()
+    return db.query(Order).filter(Order.user_id == user.id).order_by(Order.created_at.desc()).all()
 
 
 # ADMIN UPDATE STATUS
-@router.put("/{order_id}")
+@router.put("/{order_id}", response_model=OrderResponse)
 def update_status(
     order_id: int,
     status: OrderStatus,
     db: Session = Depends(get_db),
     admin=Depends(require_role("admin"))
 ):
-    order = db.query(Order).get(order_id)
+    order = db.get(Order, order_id)
 
     if not order:
         raise HTTPException(404, "Order not found")
